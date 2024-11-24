@@ -117,6 +117,16 @@
 <script>
     let compressedImageData = null; // Змінна для збереження стиснутого зображення
 
+    // Функція для перевірки наявності Pica перед використанням
+    function checkPicaLibrary() {
+        if (typeof pica === 'undefined') {
+            console.error('Pica library is not loaded');
+            alert('Pica library is not loaded correctly. Please try again later.');
+            return false;
+        }
+        return true;
+    }
+
     document.getElementById("uploadForm").addEventListener("submit", function(event) {
         event.preventDefault();
         const fileInput = document.getElementById("imageInput");
@@ -138,6 +148,12 @@
             image.src = e.target.result;
             
             image.onload = function() {
+                // Перевірка наявності Pica перед стисненням
+                if (!checkPicaLibrary()) {
+                    document.getElementById("loader").style.display = "none";
+                    return;
+                }
+
                 // Створення канваса для стиснення
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -147,13 +163,6 @@
                 const height = (image.height / image.width) * width;  // Пропорційне зменшення
                 canvas.width = width;
                 canvas.height = height;
-
-                // Перевірка чи бібліотека Pica завантажена
-                if (typeof pica === 'undefined') {
-                    alert("Pica library is not loaded!");
-                    document.getElementById("loader").style.display = "none";
-                    return;
-                }
 
                 // Використовуємо Pica для стиснення зображення
                 pica.resize(image, canvas)
