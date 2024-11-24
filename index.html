@@ -111,7 +111,8 @@
     <button id="downloadBtn" onclick="downloadImage()">Download Compressed Image</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pica/8.0.1/pica.min.js"></script>
+<!-- Підключення бібліотеки Pica через CDN -->
+<script src="https://cdn.jsdelivr.net/npm/pica@8.0.0/pica.min.js"></script>
 
 <script>
     let compressedImageData = null; // Змінна для збереження стиснутого зображення
@@ -146,6 +147,13 @@
                 const height = (image.height / image.width) * width;  // Пропорційне зменшення
                 canvas.width = width;
                 canvas.height = height;
+
+                // Перевірка чи бібліотека Pica завантажена
+                if (typeof pica === 'undefined') {
+                    alert("Pica library is not loaded!");
+                    document.getElementById("loader").style.display = "none";
+                    return;
+                }
 
                 // Використовуємо Pica для стиснення зображення
                 pica.resize(image, canvas)
