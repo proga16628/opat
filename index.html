@@ -111,21 +111,11 @@
     <button id="downloadBtn" onclick="downloadImage()">Download Compressed Image</button>
 </div>
 
-<!-- Підключення бібліотеки Pica через CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pica/8.0.0/pica.min.js"></script>
+<!-- Підключення бібліотеки Compressor.js через CDN -->
+<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.0.8/dist/compressor.min.js"></script>
 
 <script>
     let compressedImageData = null; // Змінна для збереження стиснутого зображення
-
-    // Функція для перевірки наявності Pica перед використанням
-    function checkPicaLibrary() {
-        if (typeof pica === 'undefined') {
-            console.error('Pica library is not loaded');
-            alert('Pica library is not loaded correctly. Please try again later.');
-            return false;
-        }
-        return true;
-    }
 
     document.getElementById("uploadForm").addEventListener("submit", function(event) {
         event.preventDefault();
@@ -142,55 +132,31 @@
         const resultDiv = document.getElementById("result");
         resultDiv.innerHTML = "";  // Очищаємо попередній результат
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const image = new Image();
-            image.src = e.target.result;
-            
-            image.onload = function() {
-                // Перевірка наявності Pica перед стисненням
-                if (!checkPicaLibrary()) {
-                    document.getElementById("loader").style.display = "none";
-                    return;
-                }
-
-                // Створення канваса для стиснення
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
-                // Встановлюємо розміри стиснутого зображення (наприклад, 500px по ширині)
-                const width = 500;
-                const height = (image.height / image.width) * width;  // Пропорційне зменшення
-                canvas.width = width;
-                canvas.height = height;
-
-                // Використовуємо Pica для стиснення зображення
-                pica.resize(image, canvas)
-                    .then(() => {
-                        // Сховуємо спинер
-                        document.getElementById("loader").style.display = "none";
-                        
-                        // Зберігаємо стиснуте зображення у змінній
-                        compressedImageData = canvas.toDataURL("image/jpeg", 0.7);  // 0.7 - якість зображення
-
-                        // Показуємо стиснуте зображення
-                        const compressedImage = document.createElement("img");
-                        compressedImage.src = compressedImageData;
-                        resultDiv.appendChild(compressedImage);
-                        
-                        // Показуємо кнопку для завантаження
-                        document.getElementById("downloadBtn").style.display = "inline-block";
-                    })
-                    .catch(error => {
-                        // Сховуємо спинер
-                        document.getElementById("loader").style.display = "none";
-                        console.error('Error resizing image:', error);
-                        alert("Error compressing the image!");
-                    });
-            };
-        };
-        
-        reader.readAsDataURL(file);
+        // Використовуємо Compressor.js для стиснення
+        new Compressor(file, {
+            quality: 0.7, // Якість стиснення (0.7 = 70% від оригіналу)
+            success(result) {
+                // Сховуємо спинер
+                document.getElementById("loader").style.display = "none";
+                
+                // Зберігаємо стиснуте зображення у змінній
+                compressedImageData = URL.createObjectURL(result);
+                
+                // Показуємо стиснуте зображення
+                const compressedImage = document.createElement("img");
+                compressedImage.src = compressedImageData;
+                resultDiv.appendChild(compressedImage);
+                
+                // Показуємо кнопку для завантаження
+                document.getElementById("downloadBtn").style.display = "inline-block";
+            },
+            error(err) {
+                // Сховуємо спинер
+                document.getElementById("loader").style.display = "none";
+                console.error("Error during image compression:", err);
+                alert("Error compressing the image!");
+            }
+        });
     });
 
     // Функція для завантаження стиснутого зображення
