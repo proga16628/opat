@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Compression</title>
+    <title>Image Compression Tool</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f2f2f2;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -22,17 +22,12 @@
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
-            max-width: 600px;
             width: 100%;
+            max-width: 600px;
         }
         h1 {
             font-size: 24px;
             color: #333;
-            margin-bottom: 20px;
-        }
-        p {
-            font-size: 16px;
-            color: #555;
             margin-bottom: 20px;
         }
         input[type="file"] {
@@ -75,7 +70,6 @@
             max-width: 100%;
             margin-top: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         #downloadBtn {
             padding: 10px 20px;
@@ -95,67 +89,66 @@
 <body>
 
 <div class="container">
-    <h1>Welcome to the Image Compression Tool</h1>
-    <p>Upload an image to compress it.</p>
+    <h1>Image Compression Tool</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button id="compressBtn">Compress Image</button>
     
-    <!-- Форма для завантаження зображення -->
-    <form id="uploadForm">
-        <input type="file" id="imageInput" accept="image/*" required>
-        <button type="submit">Compress Image</button>
-    </form>
-    
-    <!-- Спинер для індикації завантаження -->
     <div id="loader" class="loader"></div>
     
     <div id="result"></div>
     <button id="downloadBtn" onclick="downloadImage()">Download Compressed Image</button>
 </div>
 
-<!-- Підключення бібліотеки Compressor.js через CDN -->
-<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.0.8/dist/compressor.min.js"></script>
+<!-- Підключення бібліотеки Compress.js -->
+<script src="https://cdn.jsdelivr.net/npm/compress.js"></script>
 
 <script>
-    let compressedImageData = null; // Змінна для збереження стиснутого зображення
+    const compressBtn = document.getElementById('compressBtn');
+    const loader = document.getElementById('loader');
+    const resultDiv = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadBtn');
+    let compressedImageData = null;
 
-    document.getElementById("uploadForm").addEventListener("submit", function(event) {
-        event.preventDefault();
-        const fileInput = document.getElementById("imageInput");
+    compressBtn.addEventListener('click', function () {
+        const fileInput = document.getElementById('imageInput');
         const file = fileInput.files[0];
         
         if (!file) {
-            alert("Please choose an image to upload!");
+            alert('Please select an image to compress');
             return;
         }
-        
-        // Показуємо спинер (індикатор завантаження)
-        document.getElementById("loader").style.display = "block";
-        const resultDiv = document.getElementById("result");
-        resultDiv.innerHTML = "";  // Очищаємо попередній результат
 
-        // Використовуємо Compressor.js для стиснення
-        new Compressor(file, {
-            quality: 0.7, // Якість стиснення (0.7 = 70% від оригіналу)
-            success(result) {
-                // Сховуємо спинер
-                document.getElementById("loader").style.display = "none";
-                
-                // Зберігаємо стиснуте зображення у змінній
-                compressedImageData = URL.createObjectURL(result);
-                
-                // Показуємо стиснуте зображення
-                const compressedImage = document.createElement("img");
-                compressedImage.src = compressedImageData;
-                resultDiv.appendChild(compressedImage);
-                
-                // Показуємо кнопку для завантаження
-                document.getElementById("downloadBtn").style.display = "inline-block";
-            },
-            error(err) {
-                // Сховуємо спинер
-                document.getElementById("loader").style.display = "none";
-                console.error("Error during image compression:", err);
-                alert("Error compressing the image!");
-            }
+        // Показуємо спинер
+        loader.style.display = 'block';
+        resultDiv.innerHTML = '';  // Очищаємо попередній результат
+
+        // Використовуємо Compress.js для стиснення
+        const compress = new Compress();
+        compress.compress([file], {
+            size: 4, // Максимальний розмір стиснутого зображення (у мегабайтах)
+            quality: 0.75, // Якість стиснення (0.75 = 75% від оригіналу)
+            maxWidth: 800, // Максимальна ширина зображення
+            maxHeight: 800, // Максимальна висота зображення
+            resize: true // Збільшувати чи ні зображення під зазначені максимальні розміри
+        }).then(result => {
+            // Сховуємо спинер
+            loader.style.display = 'none';
+            
+            // Отримуємо стиснуте зображення
+            const compressedImage = result[0];
+            compressedImageData = compressedImage.data;
+
+            // Показуємо стиснуте зображення
+            const img = document.createElement('img');
+            img.src = compressedImageData;
+            resultDiv.appendChild(img);
+
+            // Показуємо кнопку для завантаження
+            downloadBtn.style.display = 'inline-block';
+        }).catch(err => {
+            console.error('Error during compression:', err);
+            loader.style.display = 'none';
+            alert('Error compressing the image!');
         });
     });
 
