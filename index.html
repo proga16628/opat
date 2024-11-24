@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Стиснення зображень</title>
+    <title>Стиснення зображення</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -74,7 +74,6 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.0.3/dist/compressor.min.js"></script>
 <script>
     const input = document.getElementById('imageInput');
     const output = document.getElementById('outputImage');
@@ -83,20 +82,55 @@
 
     input.addEventListener('change', (event) => {
         const file = event.target.files[0];
-        
+        if (!file) return;
+
         // Показуємо індикатор завантаження
         loadingText.style.display = 'block';
         output.style.display = 'none';
         downloadBtn.style.display = 'none';
 
-        new Compressor(file, {
-            quality: 0.6, // Рівень стиснення (від 0 до 1)
-            success(result) {
-                // Сховуємо індикатор завантаження
-                loadingText.style.display = 'none';
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+
+            img.onload = function() {
+                // Створення canvas для стиснення
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                const maxWidth = 800; // Максимальна ширина для стисненого зображення
+                const maxHeight = 600; // Максимальна висота для стисненого зображення
+
+                let width = img.width;
+                let height = img.height;
+
+                // Розрахунок нових розмірів
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                // Налаштування розміру canvas
+                canvas.width = width;
+                canvas.height = height;
+
+                // Малювання зображення на canvas
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Отримуємо стиснуте зображення в форматі dataURL
+                const compressedImage = canvas.toDataURL('image/jpeg', 0.6); // 0.6 - якість стиснення (від 0 до 1)
 
                 // Виводимо стиснуте зображення
-                output.src = URL.createObjectURL(result);
+                output.src = compressedImage;
                 output.style.display = 'block';
 
                 // Показуємо кнопку для завантаження
@@ -105,17 +139,17 @@
                 // Створюємо можливість завантажити стиснуте зображення
                 downloadBtn.onclick = function() {
                     const a = document.createElement('a');
-                    a.href = URL.createObjectURL(result);
+                    a.href = compressedImage;
                     a.download = 'compressed_image.jpg'; // Назва для завантаженого файлу
                     a.click();
                 };
-            },
-            error(err) {
-                console.error(err);
+
+                // Приховуємо індикатор завантаження
                 loadingText.style.display = 'none';
-                alert('Сталася помилка при обробці зображення!');
-            },
-        });
+            };
+        };
+
+        reader.readAsDataURL(file);
     });
 </script>
 
